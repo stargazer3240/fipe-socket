@@ -2,7 +2,7 @@ jobs:
 build:
    strategy:
       matrix:
-      os: [macos-latest, ubuntu-latest, windows-latest]
+      os: [macos-latest, ubuntu-20.04, windows-latest]
 
    runs-on: ${{ matrix.os }}
 
@@ -18,15 +18,11 @@ build:
          cache-dependency-path: |
             **/requirements*.txt
 
-
       - name: Build Executable with Nuitka
       uses: Nuitka/Nuitka-Action@main
       with:
          nuitka-version: main
-         script-name: your_main_program.py
-         # many more Nuitka options available, see action doc, but it's best
-         # to use nuitka-project: options in your code, so e.g. you can make
-         # a difference for macOS and create an app bundle there.
+         script-name: fipe-socket.py
          onefile: true
 
       - name: Upload Artifacts
