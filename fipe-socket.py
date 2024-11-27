@@ -103,9 +103,17 @@ def menu_marcas() -> None:
         marcas_json = json.loads(get_marcas().content)
         for obj in marcas_json:
             codigo_marca = int(obj["codigo"])
-            print(f"{codigo_marca:3}\t\t{obj["nome"]}")
+            print(f"{codigo_marca:3}\t\t{obj['nome']}")
 
-        codigo_escolhido = int(input("\nEscolha uma marca pelo código [0 para sair]: "))
+        try:
+            codigo_escolhido = int(
+                input("\nEscolha uma marca pelo código [0 para sair]: ")
+            )
+        except ValueError:
+            print("Número inválido, tente novamente.\n")
+            sleep(2)
+            continue
+
         modelos_response = get_modelos(codigo_escolhido)
 
         if codigo_escolhido == 0:
@@ -127,23 +135,27 @@ def menu_modelos(v: Veiculo, modelos_response: GETResponse) -> None:
         modelos_json = json.loads(modelos_response.content)
         for obj in modelos_json["modelos"]:
             codigo = int(obj["codigo"])
-            print(f"{codigo:5}\t\t{obj["nome"]}")
+            print(f"{codigo:5}\t\t{obj['nome']}")
+        try:
+            codigo_escolhido = int(
+                input("\nEscolha um modelo pelo código [0 para retornar]: ")
+            )
+        except ValueError:
+            print("Número inválido, tente novamente.\n")
+            sleep(2)
+            continue
 
-        codigo_escolhido = int(
-            input("\nEscolha um modelo pelo código [0 para retornar]: ")
-        )
         anos_response = get_anos(int(v.marca.codigo), int(codigo_escolhido))
 
         if codigo_escolhido == 0:
             return
         elif anos_response.http_status == 500:
             print("\nCódigo inválido! Tente novamente\n")
-            sleep(3)
+            sleep(2)
         else:
             v.modelo.codigo = codigo_escolhido
             v.modelo.nome = find_nome_json(codigo_escolhido, modelos_json["modelos"])
             menu_anos(v, anos_response)
-            return
 
 
 def menu_anos(v: Veiculo, anos_response: GETResponse) -> None:
@@ -152,7 +164,7 @@ def menu_anos(v: Veiculo, anos_response: GETResponse) -> None:
         print("ANO\t\tTIPO")
         anos = json.loads(anos_response.content)
         for obj in anos:
-            print(f"{obj["codigo"]}\t\t{obj["nome"]}")
+            print(f"{obj['codigo']}\t\t{obj['nome']}")
 
         codigo_escolhido = input(
             '\nEscolha um modelo pelo ano (exemplo: "2024-2") [0 para retornar]: '
@@ -166,33 +178,31 @@ def menu_anos(v: Veiculo, anos_response: GETResponse) -> None:
             return
         elif valor_response.http_status == 500:
             print("\nCódigo inválido! Tente novamente\n")
-            sleep(3)
+            sleep(2)
         else:
             v.ano.codigo = codigo_escolhido
             v.ano.nome = find_nome_json(codigo_escolhido, anos)
             menu_veiculos(valor_response)
-            return
 
 
 def menu_veiculos(valor_response: GETResponse) -> None:
     print("\nINFORMAÇÕES:\n")
     object = json.loads(valor_response.content)
-    valor = f"Marca: {object["Marca"]}\nModelo: {object["Modelo"]}\nAno: {object["AnoModelo"]}\nCombustível: {object["Combustivel"]}\nData Consulta: {object["MesReferencia"]}\nVALOR: {object["Valor"]}"
+    valor = f"Marca: {object['Marca']}\nModelo: {object['Modelo']}\nAno: {object['AnoModelo']}\nCombustível: {object['Combustivel']}\nData Consulta: {object['MesReferencia']}\nVALOR: {object['Valor']}"
     print(valor)
     while True:
-        resposta = input(
-            '\nDeseja salvar as informações em um arquivo ["sim" para confirmar]? '
-        )
+        resposta = input("\nDeseja salvar as informações em um arquivo [S/N]? ")
         if resposta.upper() in {"S", "SIM"}:
-            filename = f"{object["Modelo"]} ({object["AnoModelo"]}) - {object["MesReferencia"]}.txt"
+            filename = f"{object['Modelo']} ({object['AnoModelo']}) - {object['MesReferencia']}.txt"
             with open(filename, "w") as f:
                 print(valor, file=f)
-            print("Arquivo salvo! Voltando para o menu inicial.\n")
-            sleep(3)
-            return
-        else:
-            print("Resposta não reconhecida, tente denovo.\n")
+            print("Arquivo salvo! Voltando para o menu anterior.\n")
             sleep(2)
+            return
+        elif resposta.upper() in {"N", "NÃO", "NAO"}:
+            print("Voltando para o menu anterior.\n")
+            sleep(2)
+            return
 
 
 menu_marcas()
